@@ -40,7 +40,7 @@ public class BlockButton extends androidx.appcompat.widget.AppCompatButton {
     public void toggleFlag() {
         isFlagged = !isFlagged;
         if (isFlagged) {
-            this.setText("F");
+            this.setText("⛳️");
         } else {
             this.setText("");
         }
@@ -63,7 +63,7 @@ public class BlockButton extends androidx.appcompat.widget.AppCompatButton {
     }
 
     public void setOpenBackgroundColor() {
-        this.setBackgroundColor(Color.LTGRAY);
+        this.setBackgroundColor(Color.WHITE);
     }
 
 }
