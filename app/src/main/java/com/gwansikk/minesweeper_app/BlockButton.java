@@ -75,7 +75,7 @@ public class BlockButton extends androidx.appcompat.widget.AppCompatButton {
 
     // 해당 블럭의 배경색을 변경합니다.
     public void setOpenBackgroundColor() {
-        this.setBackgroundColor(Color.rgb(192,192,192));
+        this.setBackgroundColor(Color.rgb(192, 192, 192));
     }
 
     // 해당 블럭의 텍스트를 설정합니다.
@@ -84,14 +84,12 @@ public class BlockButton extends androidx.appcompat.widget.AppCompatButton {
         this.setTypeface(null, Typeface.BOLD); // 텍스트를 굵게 표시합니다.
 
         // 지뢰 개수에 따른 색상을 배열로 관리합니다.
-        int[] colors = {Color.BLUE, Color.rgb(5,123,2), Color.RED, Color.MAGENTA, Color.YELLOW, Color.CYAN, Color.BLACK, Color.DKGRAY};
+        int[] colors = {Color.BLUE, Color.rgb(5, 123, 2), Color.RED, Color.MAGENTA, Color.YELLOW, Color.CYAN, Color.BLACK, Color.DKGRAY};
 
         // 지뢰 개수에 해당하는 색상을 설정합니다.
         // minesAround가 1부터 시작하기 때문에 배열 인덱스에 맞추기 위해 -1을 합니다.
         if (minesAround >= 1 && minesAround <= colors.length) {
             this.setTextColor(colors[minesAround - 1]);
         }
-
     }
-
 }

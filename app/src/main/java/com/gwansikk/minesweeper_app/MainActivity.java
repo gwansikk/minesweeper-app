@@ -28,14 +28,16 @@ public class MainActivity extends AppCompatActivity {
      */
     private final int TOTAL_MINES = 10;
 
+
     private TableLayout tableLayout; // 게임판
     private int flagCount = 0; // FLAG 개수
-    private final BlockButton[][] buttons = new BlockButton[GRID_SIZE][GRID_SIZE]; // 버튼 배열
-    private final boolean[][] mines = new boolean[GRID_SIZE][GRID_SIZE]; // 지뢰 배열
+    private int openCount = 0; // 열린 블럭 개수
+    private BlockButton[][] buttons; // 버튼 배열
+    private boolean[][] mines; // 지뢰 배열
     private boolean isFlagMode = false; // 깃발 모드 여부
 
     // 타이머
-    private TextView textViewTimer; // 타이머
+    private TextView textViewTimer;
 
     Handler timerHandler = new Handler();
     Runnable timerRunnable;
@@ -46,15 +48,16 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        tableLayout = findViewById(R.id.tableLayout);
 
         // 초기화 버튼
         findViewById(R.id.resetButton).setOnClickListener(v -> setUpGame());
 
-        //  FLAG 깃발 모드를 토글 버튼으로 구현
+        //  MODE 토글 버튼
         ToggleButton toggleButton = findViewById(R.id.modeSwitch);
         toggleButton.setOnCheckedChangeListener((buttonView, isChecked) -> isFlagMode = isChecked);
 
-        // 타이머
+        // 타이머 설정
         textViewTimer = findViewById(R.id.timer);
 
         timerRunnable = new Runnable() {
@@ -65,33 +68,34 @@ public class MainActivity extends AppCompatActivity {
                 int seconds = (int) (millis / 1000);
                 seconds = seconds % 60;
 
-                textViewTimer.setText(String.format("⏱️ %03d",  seconds));
+                textViewTimer.setText(String.format("⏱️ %03d", seconds));
                 timerHandler.postDelayed(this, 500);
             }
         };
 
-        tableLayout = findViewById(R.id.tableLayout);
+        // 게임 시작
         setUpGame();
     }
 
 
-    /*
-     * 게임을 시작하기 위한 초기화 작업
-     * 버튼 생성, 지뢰 배치, 주변 지뢰 개수 계산
-     */
+    // 게임을 시작하기 위한 초기화 작업
     private void setUpGame() {
         gameInit(); // 1. 게임 초기 설정
         createButtons(); // 2. 버튼 생성
         placeMines(); // 3. 지뢰 배치
         calculateMinesAround(); // 4. 주변 지뢰 개수 계산
-        setUpTimer(); // 5. 타이머 초기화 및 시작
+        updateMinesCount(); // 5. 상태바 지뢰 초기화
+        setUpTimer(); // 6. 상태바 타이머 초기화
     }
 
     // 게임 시작을 위해 초기 설정을 합니다.
     private void gameInit() {
-        tableLayout.removeAllViews();
+        tableLayout.removeAllViews(); // 게임판 초기화
+        buttons = new BlockButton[GRID_SIZE][GRID_SIZE]; // 버튼 배열 초기화
+        mines = new boolean[GRID_SIZE][GRID_SIZE]; // 지뢰 배열 초기화
         isFlagMode = false; // 깃발 모드 여부, 기본값인 false로 설정
-        updateMinesCount(); // 인디케이터 지뢰 초기화
+        flagCount = 0; // 깃발 개수 초기화
+        openCount = 0; // 열린 블럭 개수 초기화
     }
 
     // 타이머를 초기화하고 시작합니다.
@@ -132,20 +136,17 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /*
-     * 버튼을 생성하고, 버튼의 크기를 동적으로 조정
-     */
+
+    // 버튼을 생성하고, 버튼의 크기를 동적으로 조정합니다.
     private BlockButton createButton(int x, int y, int buttonSize) {
         BlockButton button = new BlockButton(this);
-        button.setLayoutParams(new TableRow.LayoutParams(buttonSize, buttonSize));
+        button.setLayoutParams(new TableRow.LayoutParams(buttonSize, buttonSize)); // 버튼의 크기를 동적으로 조정합니다.
         button.setCoordinates(x, y); // 해당 블럭의 좌표를 저장합니다.
-        button.setBlockClickListener(new BlockClickListener());
+        button.setBlockClickListener(new BlockClickListener()); // 블럭을 클릭했을 때의 동작을 정의합니다.
         return button;
     }
 
-    /*
-     * 지뢰를 랜덤하게 배치합니다.
-     */
+    // 지뢰를 랜덤 배치합니다.
     private void placeMines() {
         int mineCount = 0;
         Random random = new Random();
@@ -163,7 +164,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
+    // 주변 지뢰 개수를 계산합니다.
     private void calculateMinesAround() {
         for (int x = 0; x < GRID_SIZE; x++) {
             for (int y = 0; y < GRID_SIZE; y++) {
@@ -240,15 +241,24 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    // 블럭을 여는 동작을 정의합니다.
     private void openBlock(BlockButton blockButton) {
         // 이미 열린 블럭이거나 지뢰일 경우 동작하지 않습니다.
         if (blockButton.isMine() || !blockButton.isEnabled()) {
             return;
         }
 
+        openCount++; // 열린 블럭 개수를 증가시킵니다.
         blockButton.setEnabled(false); // 버튼을 비활성화 합니다.
         blockButton.setOpenBackgroundColor(); // 버튼의 배경색을 변경합니다.
         int minesAround = blockButton.getMinesAround(); // 미리 계산된 지뢰 개수를 가져옵니다.
+
+        if (openCount == GRID_SIZE * GRID_SIZE - TOTAL_MINES) {
+            // 열린 블럭 개수가 총 블럭 개수에서 지뢰 개수를 뺀 값과 같을 경우
+            // 모든 블럭을 열었으므로 게임 승리 처리합니다.
+            gameWin();
+            return;
+        }
 
         if (minesAround > 0) {
             // 주변에 지뢰가 0개 이상일 경우
@@ -269,6 +279,23 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /*
+     * 게임 승리 처리
+     * 모든 블럭을 열었을 경우 게임 승리 처리합니다.
+     */
+    private void gameWin() {
+        timerHandler.removeCallbacks(timerRunnable); // 타이머를 종료합니다.
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this); // 다이얼로그를 생성합니다.
+
+        builder.setTitle("🎉 Game Win!").setMessage("축하합니다!" + "\n" + "걸린 시간: " + textViewTimer.getText() + "초"); // 게임 승리 메시지를 설정합니다.
+        builder.setPositiveButton("재시작", (dialog, id) -> setUpGame()); // 재시작, 게임을 초기화하여 재시작합니다.
+
+        // 다이얼로그를 생성하고 보여줍니다.
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+    }
+
 
     /*
      * 게임 오버 처리
@@ -277,14 +304,11 @@ public class MainActivity extends AppCompatActivity {
     private void gameOver() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
-        // 게임 오버 메시지를 설정합니다.
-        builder.setTitle("☠️ Game Over!").setMessage("다시 도전하시겠습니까?");
-
-        // 재도전, 게임을 초기화하여 재시작합니다.
-        builder.setPositiveButton("재도전", (dialog, id) -> setUpGame());
+        builder.setTitle("☠️ Game Over!").setMessage("다시 도전하시겠습니까?"); // 게임 오버 메시지를 설정합니다.
+        builder.setPositiveButton("재도전", (dialog, id) -> setUpGame()); // 재도전, 게임을 초기화하여 재시작합니다.
 
         // 결과 보기, 지뢰의 위치를 보여줍니다.
-        builder.setNegativeButton("결과 보기", (dialog, id) -> {
+        builder.setNegativeButton("지뢰 보기", (dialog, id) -> {
             Toast.makeText(getApplicationContext(), "지뢰의 위치가 보여집니다.", Toast.LENGTH_SHORT).show();
 
             // 지뢰의 위치를 보여줍니다.
