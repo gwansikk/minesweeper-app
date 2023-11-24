@@ -1,4 +1,4 @@
-# minesweeper-app
+# Minesweeper
 
 ![minesweeper-app](https://github.com/gwansikk/minesweeper-app/assets/39869096/35262004-6381-4701-9542-e07bd705fe87)
 
