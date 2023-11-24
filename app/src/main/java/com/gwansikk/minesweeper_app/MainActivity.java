@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.TableLayout;
 import android.widget.TableRow;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
@@ -27,6 +28,7 @@ public class MainActivity extends AppCompatActivity {
      */
     private final int TOTAL_MINES = 10;
 
+    private int mines_count = 0;
     private final BlockButton[][] buttons = new BlockButton[GRID_SIZE][GRID_SIZE]; // 버튼 배열
     private final boolean[][] mines = new boolean[GRID_SIZE][GRID_SIZE]; // 지뢰 배열
     private boolean isFlagMode = false; // 깃발 모드 여부
@@ -35,7 +37,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
 
         // 깃발 모드를 토글 버튼으로 구현
         ToggleButton toggleButton = findViewById(R.id.modeSwitch);
@@ -63,6 +64,13 @@ public class MainActivity extends AppCompatActivity {
     private void reset() {
         tableLayout.removeAllViews();
         isFlagMode = false; // 깃발 모드 여부, 기본값인 false로 설정
+        updateMinesCount(); // 인디케이터 지뢰 초기화
+    }
+
+    // 인디케이터의 지뢰 개수를 갱신합니다.
+    private void updateMinesCount() {
+        TextView textview = findViewById(R.id.minesCount);
+        textview.setText(String.format("💣 %d", TOTAL_MINES - mines_count));
     }
 
     /*
@@ -158,6 +166,16 @@ public class MainActivity extends AppCompatActivity {
             if (isFlagMode) {
                 // 깃발 모드일 경우 깃발을 토글합니다. (on-off)
                 blockButton.toggleFlag();
+
+                if (blockButton.isFlagged()) {
+                    // 깃발 모드일 경우 지뢰 개수를 감소시킵니다.
+                    mines_count++;
+                } else {
+                    // 깃발 모드가 아닐 경우 지뢰 개수를 증가시킵니다.
+                    mines_count--;
+                }
+
+                updateMinesCount(); // 인디케이터 지뢰 개수 갱신
             } else {
                 // 깃발 모드가 아닐 경우 블럭을 엽니다.
                 handleBlockClick(blockButton);
@@ -198,7 +216,9 @@ public class MainActivity extends AppCompatActivity {
         int minesAround = blockButton.getMinesAround(); // 미리 계산된 지뢰 개수를 가져옵니다.
 
         if (minesAround > 0) {
-            blockButton.setShowNumber(); // 주변 지뢰 개수를 표시합니다.
+            // 주변에 지뢰가 0개 이상일 경우
+            // 주변 지뢰 개수를 표시합니다.
+            blockButton.setShowText();
         } else {
             // 주변의 지뢰 갯수가 0일 경우 주변의 빈 블럭을 오픈합니다.
             for (int dx = -1; dx <= 1; dx++) {
