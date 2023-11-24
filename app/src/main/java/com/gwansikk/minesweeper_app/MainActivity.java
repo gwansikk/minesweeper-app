@@ -2,6 +2,7 @@ package com.gwansikk.minesweeper_app;
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.View;
 import android.widget.TableLayout;
 import android.widget.TableRow;
@@ -28,11 +29,18 @@ public class MainActivity extends AppCompatActivity {
     private final int TOTAL_MINES = 10;
 
     private TableLayout tableLayout; // 게임판
-
     private int flagCount = 0; // FLAG 개수
     private final BlockButton[][] buttons = new BlockButton[GRID_SIZE][GRID_SIZE]; // 버튼 배열
     private final boolean[][] mines = new boolean[GRID_SIZE][GRID_SIZE]; // 지뢰 배열
     private boolean isFlagMode = false; // 깃발 모드 여부
+
+    // 타이머
+    private TextView textViewTimer; // 타이머
+
+    Handler timerHandler = new Handler();
+    Runnable timerRunnable;
+    long startTime = 0;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,6 +50,25 @@ public class MainActivity extends AppCompatActivity {
         //  FLAG 깃발 모드를 토글 버튼으로 구현
         ToggleButton toggleButton = findViewById(R.id.modeSwitch);
         toggleButton.setOnCheckedChangeListener((buttonView, isChecked) -> isFlagMode = isChecked);
+
+        // 타이머
+        textViewTimer = findViewById(R.id.timer);
+
+        timerRunnable = new Runnable() {
+            @Override
+            public void run() {
+                long millis = System.currentTimeMillis() - startTime;
+                int seconds = (int) (millis / 1000);
+                int minutes = seconds / 60;
+                seconds = seconds % 60;
+
+                textViewTimer.setText(String.format("⏱️ %02d:%02d", minutes, seconds));
+                timerHandler.postDelayed(this, 500);
+            }
+        };
+
+        startTime = System.currentTimeMillis();
+        timerHandler.postDelayed(timerRunnable, 0);
 
         tableLayout = findViewById(R.id.tableLayout);
         setUpGame();
