@@ -78,8 +78,8 @@ public class BlockButton extends androidx.appcompat.widget.AppCompatButton {
         this.setBackgroundColor(Color.WHITE);
     }
 
-    public void setShowNumber() {
-        // 버튼의 텍스트를 주변의 지뢰 개수로 설정합니다.
+    // 해당 블럭의 텍스트를 설정합니다.
+    public void setShowText() {
         this.setText(String.valueOf(minesAround)); // 텍스트를 주변의 지뢰 개수로 설정합니다.
         this.setTypeface(null, Typeface.BOLD); // 텍스트를 굵게 표시합니다.
 
