@@ -47,6 +47,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // 초기화 버튼
+        findViewById(R.id.resetButton).setOnClickListener(v -> setUpGame());
+
         //  FLAG 깃발 모드를 토글 버튼으로 구현
         ToggleButton toggleButton = findViewById(R.id.modeSwitch);
         toggleButton.setOnCheckedChangeListener((buttonView, isChecked) -> isFlagMode = isChecked);
@@ -55,20 +58,17 @@ public class MainActivity extends AppCompatActivity {
         textViewTimer = findViewById(R.id.timer);
 
         timerRunnable = new Runnable() {
+            @SuppressLint("DefaultLocale")
             @Override
             public void run() {
                 long millis = System.currentTimeMillis() - startTime;
                 int seconds = (int) (millis / 1000);
-                int minutes = seconds / 60;
                 seconds = seconds % 60;
 
-                textViewTimer.setText(String.format("⏱️ %02d:%02d", minutes, seconds));
+                textViewTimer.setText(String.format("⏱️ %03d",  seconds));
                 timerHandler.postDelayed(this, 500);
             }
         };
-
-        startTime = System.currentTimeMillis();
-        timerHandler.postDelayed(timerRunnable, 0);
 
         tableLayout = findViewById(R.id.tableLayout);
         setUpGame();
@@ -80,19 +80,25 @@ public class MainActivity extends AppCompatActivity {
      * 버튼 생성, 지뢰 배치, 주변 지뢰 개수 계산
      */
     private void setUpGame() {
-        reset(); // 게임판을 초기화합니다.
-        createButtons(); // 1. 버튼 생성
-        placeMines(); // 2. 지뢰 배치
-        calculateMinesAround(); // 3. 주변 지뢰 개수 계산
+        gameInit(); // 1. 게임 초기 설정
+        createButtons(); // 2. 버튼 생성
+        placeMines(); // 3. 지뢰 배치
+        calculateMinesAround(); // 4. 주변 지뢰 개수 계산
+        setUpTimer(); // 5. 타이머 초기화 및 시작
     }
 
-    /*
-     * 게임판을 초기화합니다.
-     */
-    private void reset() {
+    // 게임 시작을 위해 초기 설정을 합니다.
+    private void gameInit() {
         tableLayout.removeAllViews();
         isFlagMode = false; // 깃발 모드 여부, 기본값인 false로 설정
         updateMinesCount(); // 인디케이터 지뢰 초기화
+    }
+
+    // 타이머를 초기화하고 시작합니다.
+    private void setUpTimer() {
+        timerHandler.removeCallbacks(timerRunnable);
+        startTime = System.currentTimeMillis();
+        timerHandler.postDelayed(timerRunnable, 0);
     }
 
     // 인디케이터의 지뢰 개수를 갱신합니다.
