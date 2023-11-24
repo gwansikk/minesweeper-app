@@ -1,9 +1,5 @@
 package com.gwansikk.minesweeper_app;
 
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-
-import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TableLayout;
@@ -11,14 +7,17 @@ import android.widget.TableRow;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+
 import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
     private TableLayout tableLayout; // 게임판
 
     /*
-     * 게임판의 크기와 총 지뢰 개수를 상수로 정의
-     * 게임판의 크기를 변경하고자 하면 이 부분만 수정하면 됨 n*n으로 구성되어 있음
+     * 게임판의 크기와 총 지뢰 개수를 상수로 정의 (n*n)
+     * 게임판의 크기를 변경하고자 하면 아래의 값을 변경하면 됩니다.
      */
     private final int GRID_SIZE = 9;
 
@@ -28,8 +27,8 @@ public class MainActivity extends AppCompatActivity {
      */
     private final int TOTAL_MINES = 10;
 
-    private BlockButton[][] buttons = new BlockButton[GRID_SIZE][GRID_SIZE]; // 버튼 배열
-    private boolean[][] mines = new boolean[GRID_SIZE][GRID_SIZE]; // 지뢰 배열
+    private final BlockButton[][] buttons = new BlockButton[GRID_SIZE][GRID_SIZE]; // 버튼 배열
+    private final boolean[][] mines = new boolean[GRID_SIZE][GRID_SIZE]; // 지뢰 배열
     private boolean isFlagMode = false; // 깃발 모드 여부
 
     @Override
@@ -37,9 +36,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        /*
-         * 깃발 모드를 토글 버튼으로 구현
-         */
+
+        // 깃발 모드를 토글 버튼으로 구현
         ToggleButton toggleButton = findViewById(R.id.modeSwitch);
         toggleButton.setOnCheckedChangeListener((buttonView, isChecked) -> isFlagMode = isChecked);
 
@@ -64,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
      */
     private void reset() {
         tableLayout.removeAllViews();
-        isFlagMode = false; // 깃발 모드 여부
+        isFlagMode = false; // 깃발 모드 여부, 기본값인 false로 설정
     }
 
     /*
@@ -78,9 +76,7 @@ public class MainActivity extends AppCompatActivity {
         int screenWidth = getResources().getDisplayMetrics().widthPixels;
         int buttonSize = screenWidth / GRID_SIZE;
 
-        /*
-         * 테이블의 행을 생성하고, 각 행에 버튼을 추가합니다.
-         */
+        // 테이블의 행을 생성하고, 각 행에 버튼을 추가합니다.
         for (int i = 0; i < GRID_SIZE; i++) {
             TableRow row = new TableRow(this);
             row.setLayoutParams(new TableLayout.LayoutParams(TableLayout.LayoutParams.MATCH_PARENT, TableLayout.LayoutParams.WRAP_CONTENT));
@@ -94,7 +90,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /*
-     * 버튼을 생성하고, 버튼의 크기를 동적(디스플레이 반응형 대응)으로 조정
+     * 버튼을 생성하고, 버튼의 크기를 동적으로 조정
      */
     private BlockButton createButton(int x, int y, int buttonSize) {
         BlockButton button = new BlockButton(this);
@@ -172,15 +168,17 @@ public class MainActivity extends AppCompatActivity {
          * 블럭을 클릭했을 때의 동작을 정의합니다.
          */
         private void handleBlockClick(BlockButton blockButton) {
+            boolean isFlagged = blockButton.isFlagged();
+
             // 깃발 모드가 아닐 경우 블럭을 열지 못하도록 합니다.
-            if (blockButton.isFlagged()) {
+            if (isFlagged) {
                 return;
             }
 
             if (blockButton.isMine()) {
                 // 해당 버튼이 지뢰일 경우 게임 오버 처리합니다.
                 gameOver();
-            } else if (!blockButton.isFlagged()) {
+            } else {
                 // 해당 버튼이 지뢰가 아닐 경우 주변 지뢰 개수를 표시합니다.
                 // 지뢰 개수는 초기화 작업에서 미리 계산된 값을 표시하게 됩니다
                 openBlock(blockButton);
@@ -196,14 +194,13 @@ public class MainActivity extends AppCompatActivity {
         }
 
         blockButton.setEnabled(false); // 버튼을 비활성화 합니다.
-        blockButton.setOpenBackgroundColor(); // 열려진 블럭의 색상을 변경합니다.
+        blockButton.setOpenBackgroundColor(); // 버튼의 배경색을 변경합니다.
         int minesAround = blockButton.getMinesAround(); // 미리 계산된 지뢰 개수를 가져옵니다.
 
         if (minesAround > 0) {
-            // 주변의 지뢰 갯수 표시
-            blockButton.setText(String.valueOf(minesAround));
+            blockButton.setShowNumber(); // 주변 지뢰 개수를 표시합니다.
         } else {
-            // 주변에서 빈 블럭을 오픈합니다.
+            // 주변의 지뢰 갯수가 0일 경우 주변의 빈 블럭을 오픈합니다.
             for (int dx = -1; dx <= 1; dx++) {
                 for (int dy = -1; dy <= 1; dy++) {
                     int nx = blockButton.getXCoordinate() + dx;
@@ -218,28 +215,34 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    /*
+     * 게임 오버 처리
+     * 게임 오버가 되면 지뢰의 위치를 보여주고, 재도전 또는 결과 보기를 선택할 수 있습니다.
+     */
     private void gameOver() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
-        builder.setTitle("☠️ Game Over!").setMessage("다시 시도하시겠습니까?");
+        // 게임 오버 메시지를 설정합니다.
+        builder.setTitle("☠️ Game Over!").setMessage("다시 도전하시겠습니까?");
 
-        builder.setPositiveButton("재도전", (dialog, id) -> {
-            setUpGame();
-        });
+        // 재도전, 게임을 초기화하여 재시작합니다.
+        builder.setPositiveButton("재도전", (dialog, id) -> setUpGame());
 
-        builder.setNegativeButton("닫기", (dialog, id) -> {
+        // 결과 보기, 지뢰의 위치를 보여줍니다.
+        builder.setNegativeButton("결과 보기", (dialog, id) -> {
             Toast.makeText(getApplicationContext(), "지뢰의 위치가 보여집니다.", Toast.LENGTH_SHORT).show();
 
+            // 지뢰의 위치를 보여줍니다.
             for (int x = 0; x < GRID_SIZE; x++) {
                 for (int y = 0; y < GRID_SIZE; y++) {
-                    if (mines[x][y]) {
+                    if (buttons[x][y].isMine()) {
                         buttons[x][y].setText("💣️");
                     }
                 }
             }
         });
 
-
+        // 다이얼로그를 생성하고 보여줍니다.
         AlertDialog alertDialog = builder.create();
         alertDialog.show();
     }
