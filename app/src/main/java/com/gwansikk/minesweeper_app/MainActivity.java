@@ -1,5 +1,6 @@
 package com.gwansikk.minesweeper_app;
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TableLayout;
@@ -14,8 +15,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
-    private TableLayout tableLayout; // 게임판
-
     /*
      * 게임판의 크기와 총 지뢰 개수를 상수로 정의 (n*n)
      * 게임판의 크기를 변경하고자 하면 아래의 값을 변경하면 됩니다.
@@ -24,11 +23,13 @@ public class MainActivity extends AppCompatActivity {
 
     /*
      * 총 지뢰의 수
-     * 총 지뢰 개수를 변경하고자 하면 이 부분만 수정하면 됨
+     * 총 지뢰 개수를 변경하고자 하면 아래의 값을 변경하면 됩니다.
      */
     private final int TOTAL_MINES = 10;
 
-    private int mines_count = 0;
+    private TableLayout tableLayout; // 게임판
+
+    private int flagCount = 0; // FLAG 개수
     private final BlockButton[][] buttons = new BlockButton[GRID_SIZE][GRID_SIZE]; // 버튼 배열
     private final boolean[][] mines = new boolean[GRID_SIZE][GRID_SIZE]; // 지뢰 배열
     private boolean isFlagMode = false; // 깃발 모드 여부
@@ -38,7 +39,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // 깃발 모드를 토글 버튼으로 구현
+        //  FLAG 깃발 모드를 토글 버튼으로 구현
         ToggleButton toggleButton = findViewById(R.id.modeSwitch);
         toggleButton.setOnCheckedChangeListener((buttonView, isChecked) -> isFlagMode = isChecked);
 
@@ -68,9 +69,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // 인디케이터의 지뢰 개수를 갱신합니다.
+    @SuppressLint("DefaultLocale")
     private void updateMinesCount() {
-        TextView textview = findViewById(R.id.minesCount);
-        textview.setText(String.format("💣 %d", TOTAL_MINES - mines_count));
+        TextView minesCountTextview = findViewById(R.id.minesCount);
+        minesCountTextview.setText(String.format("💣 %d", TOTAL_MINES - flagCount));
     }
 
     /*
@@ -169,10 +171,10 @@ public class MainActivity extends AppCompatActivity {
 
                 if (blockButton.isFlagged()) {
                     // 깃발 모드일 경우 지뢰 개수를 감소시킵니다.
-                    mines_count++;
+                    flagCount++;
                 } else {
                     // 깃발 모드가 아닐 경우 지뢰 개수를 증가시킵니다.
-                    mines_count--;
+                    flagCount--;
                 }
 
                 updateMinesCount(); // 인디케이터 지뢰 개수 갱신
