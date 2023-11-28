@@ -35,13 +35,13 @@ public class MainActivity extends AppCompatActivity {
     private BlockButton[][] buttons; // 버튼 배열
     private boolean[][] mines; // 지뢰 배열
     private boolean isFlagMode = false; // 깃발 모드 여부
+    private boolean isPause = false; // 게임 일시 정지 여부
 
-    // 타이머
-    private TextView textViewTimer;
 
-    Handler timerHandler = new Handler();
-    Runnable timerRunnable;
-    long startTime = 0;
+    private TextView textViewTimer; // 타이머 TextView
+    Handler timerHandler = new Handler(); // 타이머 핸들러
+    Runnable timerRunnable; // 타이머 Runnable
+    long startTime = 0; // 타이머 시작 시간
 
 
     @Override
@@ -229,8 +229,9 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
 
-            if (blockButton.isMine()) {
+            if (blockButton.isMine() && !isPause) {
                 // 해당 버튼이 지뢰일 경우 게임 오버 처리합니다.
+                isPause = true;
                 gameOver();
             } else {
                 // 해당 버튼이 지뢰가 아닐 경우 주변 지뢰 개수를 표시합니다.
@@ -253,9 +254,10 @@ public class MainActivity extends AppCompatActivity {
         blockButton.setOpenBackgroundColor(); // 버튼의 배경색을 변경합니다.
         int minesAround = blockButton.getMinesAround(); // 미리 계산된 지뢰 개수를 가져옵니다.
 
-        if (openCount == GRID_SIZE * GRID_SIZE - TOTAL_MINES) {
+        if ((openCount == GRID_SIZE * GRID_SIZE - TOTAL_MINES) && !isPause) {
             // 열린 블럭 개수가 총 블럭 개수에서 지뢰 개수를 뺀 값과 같을 경우
             // 모든 블럭을 열었으므로 게임 승리 처리합니다.
+            isPause = true;
             gameWin();
             return;
         }
